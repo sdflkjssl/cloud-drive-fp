@@ -1,0 +1,20 @@
+# 敏感凭据
+alist-admin-pass.txt
+quark-cookie.txt
+fp-idmap.json
+*.key
+*.pem
+
+# 运行数据
+logs/
+offline/
+offline-cache/
+*.log
+
+# macOS
+.DS_Store
+
+# Xcode (工程由 xcodegen 生成: cd app && xcodegen generate)
+DerivedData/
+xcuserdata/
+app/Plinth.xcodeproj/

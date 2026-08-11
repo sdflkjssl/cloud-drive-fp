@@ -1,0 +1,15 @@
+// Local build settings.
+//
+// Set DEVELOPMENT_TEAM to your Apple Developer team id — the 10-character
+// string in the OU field of your signing certificate, or on the Membership page
+// of developer.apple.com. Both targets need it: a File Provider extension talks
+// to its host app through an App Group, App Groups are a provisioned
+// capability, and ad-hoc signing cannot carry one.
+//
+// A free Apple ID is enough for local development.
+//
+// You can also override this without editing the file:
+//
+//   xcodebuild -scheme Plinth DEVELOPMENT_TEAM=ABCDE12345 build
+
+DEVELOPMENT_TEAM =

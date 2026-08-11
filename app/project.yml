@@ -1,0 +1,117 @@
+# XcodeGen spec. The project is defined as text; the .xcodeproj is generated and
+# never committed.
+#
+#   brew install xcodegen
+#   xcodegen generate
+#
+# 🔴 BEFORE YOU BUILD: set your team in Config/Local.xcconfig, and change the
+# bundle identifiers below. Four things must agree, or the extension will build,
+# install, bind, and then silently do nothing:
+#
+#   1. the app's PRODUCT_BUNDLE_IDENTIFIER
+#   2. the extension's, which MUST be prefixed by the app's or the provisioning
+#      profile will not cover it
+#   3. com.apple.security.application-groups in BOTH .entitlements files
+#   4. NSExtensionFileProviderDocumentGroup in the extension's Info.plist
+#      and Credentials.appGroup in the Swift source
+name: Plinth
+
+options:
+  bundleIdPrefix: com.quarkpan
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+
+configFiles:
+  Debug: Config/Local.xcconfig
+  Release: Config/Local.xcconfig
+
+targets:
+  # ---------------------------------------------------------------------------
+  # The host app. Its only jobs are to hold the credential in the shared App
+  # Group and to register the domain — without a host app declaring the domain,
+  # the extension is inert no matter how correctly it is signed and installed.
+  Plinth:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+      # Shared with the extension rather than duplicated. Both sides read and
+      # write the same App Group keys, and a drifted copy of this file is a
+      # silent failure — the extension simply finds no credential.
+      - path: Extension/Credentials.swift
+    info:
+      path: Info.plist
+      properties:
+        LSMinimumSystemVersion: "15.0"
+        CFBundleDisplayName: Plinth
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.quarkpan.plinth
+        PRODUCT_NAME: Plinth
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        # 🔴 Real signing, not ad-hoc. A File Provider extension needs an App
+        # Group to talk to its host app, and App Groups are a PROVISIONED
+        # capability — ad-hoc signing cannot carry one.
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: App/Plinth.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+    dependencies:
+      - target: PlinthFileProvider
+        embed: true
+
+  # ---------------------------------------------------------------------------
+  PlinthFileProvider:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: Extension
+    info:
+      path: Extension/Info.plist
+      properties:
+        CFBundleDisplayName: Plinth
+        # 🔑 Must match the host app's, or the embedded-binary validator warns:
+        # "The CFBundleShortVersionString of an app extension must match that of
+        # its containing parent app." The app gets these from MARKETING_VERSION
+        # via GENERATE_INFOPLIST_FILE; this target has an explicit plist, so it
+        # does not, and they have to be stated.
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.fileprovider-nonui
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).FileProviderExtension
+          # Must equal the App Group in both entitlements files and in
+          # Credentials.appGroup.
+          NSExtensionFileProviderDocumentGroup: group.com.quarkpan.plinth
+          NSExtensionFileProviderSupportsEnumeration: true
+          # OneDrive-style status badges (NSFileProviderItemDecorating).
+          # synced = green checkmark (checkmark.circle.fill), shown on files
+          # that have been downloaded to disk.
+          NSFileProviderDecorations:
+            com.quarkpan.plinth.decoration.synced:
+              BadgeImageType: Symbol
+              SymbolName: checkmark.circle.fill
+              Label: 已同步到本地
+              Category: SyncState
+        # The reference server speaks plain HTTP on loopback. Delete this whole
+        # block when you point the drive at a real HTTPS endpoint.
+        NSAppTransportSecurity:
+          NSExceptionDomains:
+            127.0.0.1:
+              NSExceptionAllowsInsecureHTTPLoads: true
+    settings:
+      base:
+        # 🔴 Extension bundle ids MUST be prefixed by the host app's, or the
+        # provisioning profile will not cover them.
+        PRODUCT_BUNDLE_IDENTIFIER: com.quarkpan.plinth.FileProvider
+        PRODUCT_NAME: PlinthFileProvider
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: Extension/PlinthFileProvider.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        SKIP_INSTALL: YES

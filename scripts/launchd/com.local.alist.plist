@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.local.alist</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string><USER>/.local/bin/alist</string>
+        <string>server</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string><USER>/Library/Application Support/alist</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string><DATA_DIR>/logs/alist-launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string><DATA_DIR>/logs/alist-launchd.err</string>
+</dict>
+</plist>

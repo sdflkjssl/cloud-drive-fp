@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Extensions are always sandboxed; stating it keeps the two targets'
+	     entitlements readable side by side. -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+
+	<!-- 🔴 THIS TARGET MATTERS MOST FOR THIS ENTITLEMENT. The extension is the
+	     process that holds the backend credential in memory, and it is SIGNED
+	     SEPARATELY from the app — so it can carry get-task-allow even when the
+	     app does not.
+
+	     Denying it explicitly is not redundant with building Release. Xcode
+	     injects get-task-allow whenever the signing identity is a DEVELOPMENT
+	     certificate, which is the only kind most people have, so
+	     `-configuration Release` alone still ships it. With it set and a
+	     hardened runtime, task_for_pid is open: anything running as the user can
+	     attach to this process and read the credential, with no prompt. -->
+	<key>com.apple.security.get-task-allow</key>
+	<false/>
+
+	<!-- The extension does all the network work: it talks to the backend
+	     directly rather than proxying through the host app. -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+
+	<!-- 🔴 Must match the host app's group EXACTLY, and match both
+	     NSExtensionFileProviderDocumentGroup and Credentials.appGroup. If these
+	     drift, the extension silently enumerates nothing — there is no error. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.quarkpan.plinth</string>
+	</array>
+</dict>
+</plist>
